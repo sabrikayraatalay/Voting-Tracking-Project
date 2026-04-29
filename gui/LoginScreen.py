@@ -33,16 +33,25 @@ class LoginScreen:
         self.root.title("Election System - Login")
         self.root.configure(bg=BG)
 
-        # 1. Render UI first (macOS Bug Fix)
-        self.setup_ui()
-        self.root.update()
+        # 1. MAC BUG FIX: Ekran çizilene kadar pencereyi tamamen gizle
+        self.root.withdraw()
 
-        # 2. Apply dimensions and lock resizing AFTER rendering
+        # 2. Monitör boyutunu al ve ekranı tam ortaya konumlandır
+        # (Bu komutlar UI çizilmeden önce de çalışır, beklememize gerek yok)
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
         w, h = 400, 420
         self.root.geometry(f"{w}x{h}+{(sw - w)//2}+{(sh - h)//2}")
         self.root.resizable(False, False)
+
+        # 3. UI elemanlarını (butonlar, kutular vs.) pencereye yerleştir
+        self.setup_ui()
+
+        # 4. Güvenli Çizim: İşletim sistemi olaylarını dinlemeden SADECE çizimi güncelle
+        self.root.update_idletasks()
+
+        # 5. Her şey hazır! Gizlediğimiz pencereyi tüm ihtişamıyla ekrana getir
+        self.root.deiconify()
 
     def setup_ui(self):
         hero = tk.Frame(self.root, bg=ACCENT)
