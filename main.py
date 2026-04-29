@@ -1,4 +1,4 @@
-print()
+
 import tkinter as tk
 from gui.LoginScreen import LoginScreen
 from database import DatabaseManager
