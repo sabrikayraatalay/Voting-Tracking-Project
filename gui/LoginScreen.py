@@ -1,135 +1,100 @@
 import tkinter as tk
-from tkinter import messagebox, ttk
+from tkinter import messagebox
 from gui.DashboardScreen import DashboardScreen
 
-# ── Design Tokens ─────────────────────────────────────────────────────────────
-BG         = "#EAECF0"
-CARD_BG    = "#FFFFFF"
-ACCENT     = "#1A3A5C"
+BG = "#EAECF0"
+CARD_BG = "#FFFFFF"
+ACCENT = "#1A3A5C"
 ACCENT_LIT = "#2E5F8A"
-TEXT_PRI   = "#1C1C1E"
-TEXT_SEC   = "#6E6E73"
-BORDER     = "#C8C8CC"
-FONT       = "Helvetica Neue"
-# ─────────────────────────────────────────────────────────────────────────────
+TEXT_PRI = "#1C1C1E"
+TEXT_SEC = "#6E6E73"
+BORDER = "#C8C8CC"
+FONT = "Arial"
 
 
-def make_button(parent, text, command, bg, hover_bg, fg="white", pad_y=13):
-    """
-    macOS-safe clickable button built from a Label.
-    tk.Button ignores bg on macOS Aqua theme; tk.Label does not.
-    """
+def make_button(parent, text, command, bg, hover_bg):
     btn = tk.Label(parent, text=text,
                    font=(FONT, 13, "bold"),
-                   bg=bg, fg=fg,
+                   bg=bg, fg="white",
                    cursor="hand2",
-                   pady=pad_y)
+                   pady=13)
     btn.pack(fill="x")
     btn.bind("<Button-1>", lambda e: command())
-    btn.bind("<Enter>",    lambda e: btn.configure(bg=hover_bg))
-    btn.bind("<Leave>",    lambda e: btn.configure(bg=bg))
+    btn.bind("<Enter>", lambda e: btn.configure(bg=hover_bg))
+    btn.bind("<Leave>", lambda e: btn.configure(bg=bg))
     return btn
 
 
 class LoginScreen:
     def __init__(self, root, db_manager):
         self.root = root
-        self.db   = db_manager
+        self.db = db_manager
 
-        self.root.title("Election System — Login")
+        self.root.title("Election System - Login")
         self.root.configure(bg=BG)
-        self.root.resizable(False, False)
 
-        # Set geometry BEFORE building UI — avoids macOS layout collapse
+        # 1. Render UI first (macOS Bug Fix)
+        self.setup_ui()
+        self.root.update()
+
+        # 2. Apply dimensions and lock resizing AFTER rendering
         sw = self.root.winfo_screenwidth()
         sh = self.root.winfo_screenheight()
-        w, h = 400, 500
-        self.root.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
-
-        self.setup_ui()
+        w, h = 400, 420
+        self.root.geometry(f"{w}x{h}+{(sw - w)//2}+{(sh - h)//2}")
+        self.root.resizable(False, False)
 
     def setup_ui(self):
-        # ── Hero strip ────────────────────────────────────────────────────
         hero = tk.Frame(self.root, bg=ACCENT)
-        hero.pack(fill="x", side="top")
+        hero.pack(fill="x")
 
-        tk.Label(hero, text="🗳",
-                 font=(FONT, 36), bg=ACCENT, fg="white"
-                 ).pack(pady=(24, 4))
         tk.Label(hero, text="Election System",
-                 font=(FONT, 17, "bold"), bg=ACCENT, fg="white"
-                 ).pack()
+                 font=(FONT, 17, "bold"),
+                 bg=ACCENT, fg="white").pack(pady=(24, 4))
+
         tk.Label(hero, text="Secure Voting Platform",
-                 font=(FONT, 10), bg=ACCENT, fg="#A8C0D8"
-                 ).pack(pady=(2, 22))
+                 font=(FONT, 10),
+                 bg=ACCENT, fg="#A8C0D8").pack(pady=(0, 20))
 
-        # ── Form area ─────────────────────────────────────────────────────
         form = tk.Frame(self.root, bg=BG)
-        form.pack(fill="x", padx=36, pady=28)
+        form.pack(fill="x", padx=36, pady=20)
 
-        # TC Number
         tk.Label(form, text="TC Identity Number",
-                 font=(FONT, 11, "bold"), bg=BG, fg=TEXT_SEC,
-                 anchor="w").pack(fill="x")
+                 font=(FONT, 11, "bold"),
+                 bg=BG, fg=TEXT_SEC).pack(anchor="w")
 
-        tc_wrap = tk.Frame(form, bg=CARD_BG,
-                           highlightthickness=1,
-                           highlightbackground=BORDER,
-                           highlightcolor=ACCENT)
-        tc_wrap.pack(fill="x", pady=(4, 16))
-        self.tc_entry = tk.Entry(tc_wrap,
-                                 font=(FONT, 13), bg=CARD_BG, fg=TEXT_PRI,
-                                 bd=0, relief="flat", insertbackground=ACCENT)
-        self.tc_entry.pack(fill="x", padx=12, pady=10)
-        self.tc_entry.bind("<FocusIn>",  lambda e: tc_wrap.configure(highlightbackground=ACCENT))
-        self.tc_entry.bind("<FocusOut>", lambda e: tc_wrap.configure(highlightbackground=BORDER))
-        self.tc_entry.bind("<Return>",   lambda e: self.pass_entry.focus_set())
+        self.tc_entry = tk.Entry(form, font=(FONT, 12))
+        self.tc_entry.pack(fill="x", pady=6)
 
-        # Password
         tk.Label(form, text="Password",
-                 font=(FONT, 11, "bold"), bg=BG, fg=TEXT_SEC,
-                 anchor="w").pack(fill="x")
+                 font=(FONT, 11, "bold"),
+                 bg=BG, fg=TEXT_SEC).pack(anchor="w")
 
-        pw_wrap = tk.Frame(form, bg=CARD_BG,
-                           highlightthickness=1,
-                           highlightbackground=BORDER,
-                           highlightcolor=ACCENT)
-        pw_wrap.pack(fill="x", pady=(4, 24))
-        self.pass_entry = tk.Entry(pw_wrap, show="•",
-                                   font=(FONT, 13), bg=CARD_BG, fg=TEXT_PRI,
-                                   bd=0, relief="flat", insertbackground=ACCENT)
-        self.pass_entry.pack(fill="x", padx=12, pady=10)
-        self.pass_entry.bind("<FocusIn>",  lambda e: pw_wrap.configure(highlightbackground=ACCENT))
-        self.pass_entry.bind("<FocusOut>", lambda e: pw_wrap.configure(highlightbackground=BORDER))
-        self.pass_entry.bind("<Return>",   lambda e: self.attempt_login())
+        self.pass_entry = tk.Entry(form, show="*", font=(FONT, 12))
+        self.pass_entry.pack(fill="x", pady=6)
 
-        # Sign In — Label-based button (macOS-safe)
-        make_button(form, "Sign In  →", self.attempt_login,
-                    bg=ACCENT, hover_bg=ACCENT_LIT)
-
-        tk.Label(form, text="Authorised personnel only",
-                 font=(FONT, 9), bg=BG, fg=TEXT_SEC
-                 ).pack(pady=(14, 0))
-
-    # ── Backend (unchanged) ───────────────────────────────────────────────────
+        make_button(form, "Sign In",
+                    self.attempt_login, ACCENT, ACCENT_LIT)
 
     def attempt_login(self):
-        tc       = self.tc_entry.get().strip()
+        tc = self.tc_entry.get().strip()
         password = self.pass_entry.get().strip()
 
         if not tc or not password:
-            messagebox.showwarning("Warning", "Please fill in all fields.")
+            messagebox.showwarning("Warning", "Please fill all fields.")
             return
 
         user = self.db.authenticate_user(tc, password)
 
         if user:
-            self.root.destroy()
+            # 3. Hide root instead of destroying to keep DB connection alive
+            self.root.withdraw()
             self.open_dashboard(user)
         else:
-            messagebox.showerror("Error", "Invalid TC Number or Password.")
+            messagebox.showerror("Error", "Invalid credentials.")
 
     def open_dashboard(self, user):
-        dashboard_root = tk.Tk()
-        DashboardScreen(dashboard_root, self.db, user)
-        dashboard_root.mainloop()
+        # 4. Use Toplevel to prevent new mainloop clashes
+        dash_window = tk.Toplevel(self.root)
+        dash_window.protocol("WM_DELETE_WINDOW", lambda: self.root.destroy())
+        DashboardScreen(dash_window, self.db, user)
