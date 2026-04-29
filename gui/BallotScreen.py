@@ -2,24 +2,17 @@ import tkinter as tk
 from tkinter import messagebox
 
 # ── Design Tokens ─────────────────────────────────────────────────────────────
-BG         = "#F0F2F5"
+BG         = "#EAECF0"
 CARD_BG    = "#FFFFFF"
 ACCENT     = "#1A3A5C"
 ACCENT_LIT = "#2E5F8A"
 TEXT_PRI   = "#1C1C1E"
 TEXT_SEC   = "#6E6E73"
-BORDER     = "#D1D1D6"
+BORDER     = "#C8C8CC"
 SUCCESS    = "#34C759"
 SUCCESS_LT = "#2CA048"
 FONT       = "Helvetica Neue"
 # ─────────────────────────────────────────────────────────────────────────────
-
-
-def _center(win, w, h):
-    win.update_idletasks()
-    sw = win.winfo_screenwidth()
-    sh = win.winfo_screenheight()
-    win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
 
 
 class BallotScreen:
@@ -31,21 +24,27 @@ class BallotScreen:
         self.window.title("Official Election Ballot")
         self.window.configure(bg=BG)
         self.window.resizable(False, False)
-        _center(self.window, 460, 560)
+
+        sw = self.window.winfo_screenwidth()
+        sh = self.window.winfo_screenheight()
+        w, h = 460, 560
+        self.window.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+
         self.window.grab_set()
         self.setup_ui()
 
     def setup_ui(self):
-        # ── Header ────────────────────────────────────────────────────────
+        # Header
         header = tk.Frame(self.window, bg=ACCENT)
         header.pack(fill="x")
-
         tk.Label(header, text="📋  Official Ballot",
-                 font=(FONT, 15, "bold"), bg=ACCENT, fg="white").pack(pady=(18, 2))
+                 font=(FONT, 15, "bold"), bg=ACCENT, fg="white"
+                 ).pack(pady=(18, 2))
         tk.Label(header, text="Select one candidate and submit your vote",
-                 font=(FONT, 10), bg=ACCENT, fg="#A8C0D8").pack(pady=(0, 18))
+                 font=(FONT, 10), bg=ACCENT, fg="#A8C0D8"
+                 ).pack(pady=(0, 18))
 
-        # ── Candidate list ────────────────────────────────────────────────
+        # Candidates
         self.candidates = self.db.get_all_candidates()
 
         list_frame = tk.Frame(self.window, bg=BG)
@@ -57,48 +56,41 @@ class BallotScreen:
             return
 
         self.selected_id = tk.IntVar(value=0)
+        self.rows = {}
 
-        self.rows = {}   # candidate_id -> row frame (for highlight)
         for c in self.candidates:
             self._candidate_row(list_frame, c)
 
-        # ── Submit button ─────────────────────────────────────────────────
+        # Submit button (Label-based — macOS safe)
         btn_frame = tk.Frame(self.window, bg=BG)
         btn_frame.pack(fill="x", padx=24, pady=(0, 22))
 
-        submit = tk.Button(btn_frame, text="  ✓   Submit Vote",
-                           command=self.submit_vote,
-                           font=(FONT, 13, "bold"),
-                           bg=SUCCESS, fg="white",
-                           activebackground=SUCCESS_LT, activeforeground="white",
-                           relief="flat", bd=0,
-                           cursor="hand2", pady=13)
+        submit = tk.Label(btn_frame, text="  ✓   Submit Vote",
+                          font=(FONT, 13, "bold"),
+                          bg=SUCCESS, fg="white",
+                          cursor="hand2", pady=13)
         submit.pack(fill="x")
-        submit.bind("<Enter>", lambda e: submit.configure(bg=SUCCESS_LT))
-        submit.bind("<Leave>", lambda e: submit.configure(bg=SUCCESS))
+        submit.bind("<Button-1>", lambda e: self.submit_vote())
+        submit.bind("<Enter>",    lambda e: submit.configure(bg=SUCCESS_LT))
+        submit.bind("<Leave>",    lambda e: submit.configure(bg=SUCCESS))
 
     def _candidate_row(self, parent, candidate):
         cid = candidate.get_candidate_id()
 
         row = tk.Frame(parent, bg=CARD_BG,
                        highlightthickness=1,
-                       highlightbackground=BORDER,
-                       highlightcolor=ACCENT)
+                       highlightbackground=BORDER)
         row.pack(fill="x", pady=5)
         self.rows[cid] = row
 
-        # Radio button
-        rb = tk.Radiobutton(
-            row,
-            variable=self.selected_id, value=cid,
-            bg=CARD_BG, activebackground=CARD_BG,
-            selectcolor=ACCENT,
-            cursor="hand2",
-            command=lambda c=cid: self._highlight(c)
-        )
+        rb = tk.Radiobutton(row,
+                            variable=self.selected_id, value=cid,
+                            bg=CARD_BG, activebackground=CARD_BG,
+                            selectcolor=ACCENT,
+                            cursor="hand2",
+                            command=lambda c=cid: self._highlight(c))
         rb.pack(side="left", padx=(14, 4), pady=14)
 
-        # Text info
         info = tk.Frame(row, bg=CARD_BG)
         info.pack(side="left", fill="both", expand=True, pady=10, padx=(0, 14))
 
@@ -115,7 +107,6 @@ class BallotScreen:
                      font=(FONT, 10), bg=CARD_BG, fg=TEXT_SEC,
                      anchor="w").pack(fill="x")
 
-        # Whole row is clickable
         for w in (row, info):
             w.bind("<Button-1>", lambda e, c=cid: self._select(c))
 

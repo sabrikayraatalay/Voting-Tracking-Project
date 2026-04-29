@@ -5,70 +5,59 @@ from gui.BallotScreen import BallotScreen
 from gui.AddCandidateScreen import AddCandidateScreen
 
 # ── Design Tokens ─────────────────────────────────────────────────────────────
-BG         = "#F0F2F5"
+BG         = "#EAECF0"
 CARD_BG    = "#FFFFFF"
 ACCENT     = "#1A3A5C"
 ACCENT_LIT = "#2E5F8A"
 GOLD       = "#C8963E"
 GOLD_LIT   = "#B8852E"
-GREEN_DARK = "#2C6B4F"
+GREEN      = "#2C6B4F"
 GREEN_LIT  = "#235940"
 TEXT_PRI   = "#1C1C1E"
 TEXT_SEC   = "#6E6E73"
-BORDER     = "#D1D1D6"
+BORDER     = "#C8C8CC"
 SUCCESS    = "#34C759"
 FONT       = "Helvetica Neue"
 # ─────────────────────────────────────────────────────────────────────────────
 
 
-def _center(win, w, h):
-    win.update_idletasks()
-    sw = win.winfo_screenwidth()
-    sh = win.winfo_screenheight()
-    win.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+def make_button(parent, text, command, bg, hover_bg, fg="white", pad_y=11):
+    btn = tk.Label(parent, text=text,
+                   font=(FONT, 12), bg=bg, fg=fg,
+                   cursor="hand2", anchor="w",
+                   padx=18, pady=pad_y)
+    btn.pack(fill="x", pady=6, padx=18)
+    btn.bind("<Button-1>", lambda e: command())
+    btn.bind("<Enter>",    lambda e: btn.configure(bg=hover_bg))
+    btn.bind("<Leave>",    lambda e: btn.configure(bg=bg))
+    return btn
 
 
-def _section(parent, title, icon, bar_color):
-    """Titled white card with coloured header bar."""
+def pill(parent, label, voted):
+    color  = SUCCESS if voted else "#AEAEB2"
+    symbol = "✓" if voted else "–"
+    tk.Label(parent,
+             text=f"  {symbol}  {label}: {'Voted' if voted else 'Not Voted'}  ",
+             font=(FONT, 10, "bold"), bg=color, fg="white",
+             padx=6, pady=4
+             ).pack(side="left", padx=(0, 8))
+
+
+def section_card(parent, title, icon, bar_color):
     outer = tk.Frame(parent, bg=BG)
     outer.pack(fill="x", padx=28, pady=(0, 18))
 
-    # Coloured header
     bar = tk.Frame(outer, bg=bar_color)
     bar.pack(fill="x")
     tk.Label(bar, text=f"  {icon}   {title}",
              font=(FONT, 11, "bold"), bg=bar_color, fg="white",
              anchor="w").pack(fill="x", padx=8, pady=10)
 
-    # White body
     body = tk.Frame(outer, bg=CARD_BG,
                     highlightthickness=1,
-                    highlightbackground=BORDER,
-                    highlightcolor=BORDER)
+                    highlightbackground=BORDER)
     body.pack(fill="x")
     return body
-
-
-def _btn(parent, text, command, bg, active_bg, icon=""):
-    b = tk.Button(parent, text=f"  {icon}   {text}",
-                  command=command,
-                  font=(FONT, 12), anchor="w",
-                  bg=bg, fg="white",
-                  activebackground=active_bg, activeforeground="white",
-                  relief="flat", bd=0, cursor="hand2", pady=11)
-    b.pack(fill="x", padx=18, pady=6)
-    b.bind("<Enter>", lambda e: b.configure(bg=active_bg))
-    b.bind("<Leave>", lambda e: b.configure(bg=bg))
-    return b
-
-
-def _pill(parent, label, voted: bool):
-    color  = SUCCESS if voted else "#AEAEB2"
-    symbol = "✓" if voted else "–"
-    tk.Label(parent, text=f"  {symbol}  {label}: {'Voted' if voted else 'Not voted'}  ",
-             font=(FONT, 10, "bold"),
-             bg=color, fg="white",
-             padx=8, pady=4).pack(side="left", padx=(0, 8))
 
 
 class DashboardScreen:
@@ -83,25 +72,27 @@ class DashboardScreen:
         self.root.configure(bg=BG)
         self.root.resizable(False, False)
 
-        height = 600 if is_admin else 430
-        _center(self.root, 640, height)
+        # Geometry BEFORE setup_ui
+        sw = self.root.winfo_screenwidth()
+        sh = self.root.winfo_screenheight()
+        w  = 640
+        h  = 580 if is_admin else 420
+        self.root.geometry(f"{w}x{h}+{(sw - w) // 2}+{(sh - h) // 2}")
+
         self.setup_ui()
 
     def setup_ui(self):
-        self._build_topbar()
-        tk.Frame(self.root, bg=BG, height=18).pack()   # top spacer
+        self._topbar()
+        tk.Frame(self.root, bg=BG, height=18).pack()
         self.create_voting_panel()
         if isinstance(self.user, Admin):
             self.create_admin_panel()
-        tk.Frame(self.root, bg=BG, height=18).pack()   # bottom spacer
+        tk.Frame(self.root, bg=BG, height=18).pack()
 
-    # ── Top bar ───────────────────────────────────────────────────────────────
-
-    def _build_topbar(self):
+    def _topbar(self):
         bar = tk.Frame(self.root, bg=ACCENT)
         bar.pack(fill="x")
 
-        # Left side
         left = tk.Frame(bar, bg=ACCENT)
         left.pack(side="left", padx=24, pady=16)
         tk.Label(left, text=f"Welcome, {self.user.get_name()}",
@@ -112,7 +103,6 @@ class DashboardScreen:
                  font=(FONT, 10), bg=ACCENT, fg="#A8C0D8",
                  anchor="w").pack(anchor="w")
 
-        # Right side — LIVE badge
         right = tk.Frame(bar, bg=ACCENT)
         right.pack(side="right", padx=24, pady=20)
         tk.Label(right, text="  🔴  LIVE  ",
@@ -122,22 +112,20 @@ class DashboardScreen:
     # ── Voter panel ───────────────────────────────────────────────────────────
 
     def create_voting_panel(self):
-        body = _section(self.root, "Voting Booth", "🗳", ACCENT)
+        body = section_card(self.root, "Voting Booth", "🗳", ACCENT)
 
         tk.Label(body, text="Cast your official vote for each open position.",
                  font=(FONT, 11), bg=CARD_BG, fg=TEXT_SEC,
-                 wraplength=520, justify="left",
-                 anchor="w").pack(fill="x", padx=18, pady=(14, 10))
+                 wraplength=520, justify="left", anchor="w"
+                 ).pack(fill="x", padx=18, pady=(14, 10))
 
-        # Status pills
-        pills = tk.Frame(body, bg=CARD_BG)
-        pills.pack(anchor="w", padx=18, pady=(0, 14))
-        _pill(pills, "President", self.user.get_has_voted_president())
-        _pill(pills, "Mayor",     self.user.get_has_voted_mayor())
+        pills_row = tk.Frame(body, bg=CARD_BG)
+        pills_row.pack(anchor="w", padx=18, pady=(0, 14))
+        pill(pills_row, "President", self.user.get_has_voted_president())
+        pill(pills_row, "Mayor",     self.user.get_has_voted_mayor())
 
-        _btn(body, "Open Ballot & Cast Vote",
-             self.open_ballot_window, ACCENT, ACCENT_LIT, icon="📋")
-
+        make_button(body, "📋   Open Ballot & Cast Vote",
+                    self.open_ballot_window, ACCENT, ACCENT_LIT)
         tk.Frame(body, bg=CARD_BG, height=10).pack()
 
     def open_ballot_window(self):
@@ -146,18 +134,17 @@ class DashboardScreen:
     # ── Admin panel ───────────────────────────────────────────────────────────
 
     def create_admin_panel(self):
-        body = _section(self.root, "Admin Control Centre", "⚙️", GOLD)
+        body = section_card(self.root, "Admin Control Centre", "⚙️", GOLD)
 
         tk.Label(body, text="Manage candidates and monitor live election results.",
                  font=(FONT, 11), bg=CARD_BG, fg=TEXT_SEC,
-                 wraplength=520, justify="left",
-                 anchor="w").pack(fill="x", padx=18, pady=(14, 10))
+                 wraplength=520, justify="left", anchor="w"
+                 ).pack(fill="x", padx=18, pady=(14, 10))
 
-        _btn(body, "Add New Candidate",
-             self.open_add_candidate_window, GOLD, GOLD_LIT, icon="➕")
-        _btn(body, "View Election Results",
-             self.show_results, GREEN_DARK, GREEN_LIT, icon="📊")
-
+        make_button(body, "➕   Add New Candidate",
+                    self.open_add_candidate_window, GOLD, GOLD_LIT)
+        make_button(body, "📊   View Election Results",
+                    self.show_results, GREEN, GREEN_LIT)
         tk.Frame(body, bg=CARD_BG, height=10).pack()
 
     def open_add_candidate_window(self):
@@ -168,9 +155,7 @@ class DashboardScreen:
         if not candidates:
             messagebox.showinfo("Results", "No votes cast yet.")
             return
-
         result_text = "CURRENT ELECTION RESULTS\n" + "─" * 30 + "\n"
         for c in candidates:
             result_text += f"{c.get_name()} ({c.get_party()}): {c.get_vote_count()} votes\n"
-
         messagebox.showinfo("Election Results", result_text)
