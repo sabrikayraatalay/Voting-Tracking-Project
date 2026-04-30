@@ -1,26 +1,31 @@
 class Election:
-
-    def __init__(self, title):
+    def __init__(self, title, status="Active"):
         self.__title = title
+        self.__status = status
         self.__candidates = []
         self.__voters = []
 
     def get_title(self):
         return self.__title
 
-    def get_all_candidates(self):
-        return self.__candidates
+    def get_status(self):
+        return self.__status
 
-    def register_candidate(self, candidate):
+    def set_status(self, status):
+        self.__status = status
+
+    def add_candidate(self, candidate):
         self.__candidates.append(candidate)
 
-    def register_voter(self, voter):
-        self.__voters.append(voter)
+    def set_candidates(self, candidate_list):
+        self.__candidates = candidate_list
 
-    def remove_candidate(self, candidate_id):
-        for candidate in self.__candidates:
-            if candidate.get_candidate_id() == candidate_id:
-                self.__candidates.remove(candidate)
-                return True
-        return False
-    
+    def get_candidates(self):
+        return self.__candidates
+
+    def get_total_votes(self):
+        """Tüm adayların oylarını toplayarak toplam katılımı hesaplar."""
+        return sum(c.get_vote_count() for c in self.__candidates)
+
+    def __str__(self):
+        return f"Election: {self.__title} ({self.__status}) - {len(self.__candidates)} Candidates"
