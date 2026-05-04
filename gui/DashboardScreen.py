@@ -131,15 +131,10 @@ class DashboardScreen:
         CandidateListScreen(self.root, self.db, self.user)
 
     def open_ballot(self, election_type):
+        # DÜZELTME: Pencere açılır, kapandığında sadece ekran yenilenir.
+        # Kullanıcının voted durumunu BallotScreen kendi içinde (başarılıysa) günceller.
         ballot_win = BallotScreen(self.root, self.db, self.user, election_type)
         self.root.wait_window(ballot_win.window)
-
-        # Oy verdikten sonra nesneyi manuel güncelle (Arayüzde ✅ görünmesi için)
-        if election_type == "President":
-            self.user.mark_voted_president()
-        else:
-            self.user.mark_voted_mayor()
-
         self.setup_ui()
 
     def end_election_action(self):

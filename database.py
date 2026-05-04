@@ -306,3 +306,7 @@ class DatabaseManager:
         self.cursor.execute("SELECT * FROM parties")
         rows = self.cursor.fetchall()
         return [Party(row[0], row[1], row[2]) for row in rows]
+
+    def close_connection(self):
+        """Veritabanı bağlantısını güvenli bir şekilde kapatır."""
+        self.conn.close()
