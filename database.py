@@ -310,3 +310,20 @@ class DatabaseManager:
     def close_connection(self):
         """Veritabanı bağlantısını güvenli bir şekilde kapatır."""
         self.conn.close()
+
+    # database.py içine eklenecekler:
+    def update_party(self, party_id, name, abbr):
+        try:
+            self.cursor.execute("UPDATE parties SET name = ?, abbreviation = ? WHERE id = ?", (name, abbr, party_id))
+            self.conn.commit()
+            return True
+        except:
+            return False
+
+    def delete_party(self, party_id):
+        try:
+            self.cursor.execute("DELETE FROM parties WHERE id = ?", (party_id,))
+            self.conn.commit()
+            return True
+        except:
+            return False

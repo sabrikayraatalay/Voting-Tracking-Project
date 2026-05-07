@@ -117,20 +117,33 @@ class CandidateListScreen:
 
         # Şehir Seçimi
         tk.Label(edit_win, text="City:", bg="white").pack(anchor="w", padx=40)
-        city_combo = ttk.Combobox(edit_win, values=CITIES, state="readonly")
 
-        # Hatanın (TclError) çözüldüğü kısım: current() kullanımı
-        try:
-            current_idx = CITIES.index(candidate.get_city())
-            city_combo.current(current_idx)
-        except (ValueError, IndexError):
-            city_combo.set(candidate.get_city())  # Listedışı ise (National vb.) manuel set
+        # President kontrolü: Eğer Cumhurbaşkanı adayı ise şehir seçimi pasif olmalı
+        is_president = candidate.get_position().lower() == "president"
+        state = "disabled" if is_president else "readonly"
+
+        city_combo = ttk.Combobox(edit_win, values=CITIES, state=state)
+
+        # Hata yönetimi: Şehir bilgisini set etme
+        if is_president:
+            city_combo.set("National")  # Veya None/Boş bırakabilirsin
+        else:
+            try:
+                # Şehir listede varsa indeksle seç, yoksa manuel yaz
+                current_city = candidate.get_city()
+                if current_city in CITIES:
+                    city_combo.current(CITIES.index(current_city))
+                else:
+                    city_combo.set(current_city)
+            except Exception:
+                city_combo.set("")
 
         city_combo.pack(fill="x", padx=40, pady=5)
 
         def save_changes():
             new_name = name_entry.get().strip()
-            new_city = city_combo.get()
+            # Eğer president ise DB'ye yine "National" veya None gönderiyoruz
+            new_city = "National" if is_president else city_combo.get()
 
             if not new_name:
                 messagebox.showerror("Error", "Name is required!")

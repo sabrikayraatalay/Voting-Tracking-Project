@@ -6,6 +6,7 @@ from gui.AddCandidateScreen import AddCandidateScreen
 from gui.ResultScreen import ResultScreen
 from gui.CandidateListScreen import CandidateListScreen
 from gui.AddPartyScreen import AddPartyScreen
+from gui.PartyListScreen import PartyListScreen
 
 # Tasarım Sabitleri
 BG = "#EAECF0"
@@ -107,7 +108,7 @@ class DashboardScreen:
         if isinstance(self.user, Admin):
             tk.Label(btn_frame, text="Admin Management", font=(FONT, 10, "bold"), bg=BG, fg="#888888").pack(
                 pady=(15, 0))
-
+            make_button(btn_frame, "🏢 MANAGE PARTIES & CANDIDATES",self.open_party_management, GOLD, GOLD_LIT)
             make_button(btn_frame, "🚩 Add New Party", self.open_add_party, GOLD, GOLD_LIT)
 
             if is_active:
@@ -160,6 +161,8 @@ class DashboardScreen:
     def open_add_party(self):
         AddPartyScreen(self.root, self.db)
 
+    def open_party_management(self):
+        PartyListScreen(self.root, self.db, self.user)
     def open_add_candidate(self):
         AddCandidateScreen(self.root, self.db)
 
