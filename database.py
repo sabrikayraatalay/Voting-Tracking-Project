@@ -215,6 +215,19 @@ class DatabaseManager:
             candidate_list.append(c)
         return candidate_list
 
+    def get_results(self):
+        """Aktif veya en son tamamlanan seçimin adaylarını ve oylarını döndürür."""
+        # En yüksek ID'ye sahip seçimi (en son seçimi) bul
+        self.cursor.execute("SELECT id FROM elections ORDER BY id DESC LIMIT 1")
+        last_election = self.cursor.fetchone()
+
+        if not last_election:
+            return []
+
+        election_id = last_election[0]
+
+        # Bulduğumuz bu ID'yi kendi metoduna göndererek adayları getir
+        return self.get_all_candidates(election_id)
     def update_candidate(self, c_id, name, party, position, city):
         try:
             self.cursor.execute('''

@@ -35,7 +35,8 @@ class ResultScreen:
         self.load_results()
 
     def load_results(self):
-        candidates = self.db.get_all_candidates()
+
+        candidates = self.db.get_results()
 
         # Oyları büyükten küçüğe sıralayalım ki daha şık dursun
         candidates.sort(key=lambda c: c.get_vote_count(), reverse=True)
